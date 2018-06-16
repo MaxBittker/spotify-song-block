@@ -1,52 +1,56 @@
-var SpotifyWebApi = require('spotify-web-api-node');
-var {client_id, client_secret} = require('../secrets.js')
+var SpotifyWebApi = require("spotify-web-api-node");
+var { client_id, client_secret } = require("./secrets.js");
+var { save_token, get_token } = require("./store.js");
 
-// credentials are optional
-var spotifyApi = new SpotifyWebApi({
-  clientId: client_id,
-  clientSecret: client_secret,
-  redirectUri: 'http://www.example.com/callback'
-});
+function extract_strings(data) {
+  let item = data.body.item;
+  let name = item.name;
+  let album = item.album.name;
+  let artist_names = item.artists.map(({ name }) => name);
+  return [name, album, ...artist_names].join(" | ").toLowerCase();
+}
 
-// spotifyApi.getMyCurrentPlaybackState({
-// })
-// .then(function(data) {
-//   // Output items
-//   console.log("Now Playing: ",data.body);
-// }, function(err) {
-//   console.log('Something went wrong!', err);
-// });
+function refresh_auth(user_id) {
+  return get_token(user_id).then(({ access_token, refresh_token }) => {
+    var spotifyApi = new SpotifyWebApi({
+      clientId: client_id,
+      clientSecret: client_secret,
+      redirect_uri: "http:localhost:8000/callback/"
+    });
+    spotifyApi.setAccessToken(access_token);
+    spotifyApi.setRefreshToken(refresh_token);
 
-/**
- * This example retrieves information about the 'current' user. The current user is the user that has
- * authorized the application to access its data.
- */
-
-// First retrieve an access token
-spotifyApi
-  .authorizationCodeGrant(authorizationCode)
-  .then(function(data) {
-    console.log('Retrieved access token', data.body['access_token']);
-
-    // Set the access token
-    spotifyApi.setAccessToken(data.body['access_token']);
-
-    // Use the access token to retrieve information about the user connected to it
-    return spotifyApi.getMe();
-  })
-  .then(function(data) {
-    // "Retrieved data for Faruk Sahin"
-    console.log('Retrieved data for ' + data.body['display_name']);
-
-    // "Email is farukemresahin@gmail.com"
-    console.log('Email is ' + data.body.email);
-
-    // "Image URL is http://media.giphy.com/media/Aab07O5PYOmQ/giphy.gif"
-    console.log('Image URL is ' + data.body.images[0].url);
-
-    // "This user has a premium account"
-    console.log('This user has a ' + data.body.product + ' account');
-  })
-  .catch(function(err) {
-    console.log('Something went wrong', err.message);
+    return spotifyApi
+      .refreshAccessToken()
+      .then(data => {
+        spotifyApi.setAccessToken(data.body.access_token);
+        save_token(
+          user_id,
+          data.body.access_token,
+          data.body.refresh_token || refresh_token
+        );
+        return spotifyApi;
+      })
+      .catch(err => console.log(err));
   });
+}
+
+function poll_playback(user_id) {
+  refresh_auth(user_id).then(spotifyApi => {
+    spotifyApi.getMyCurrentPlaybackState({}).then(
+      function(data) {
+        let playing = extract_strings(data);
+        console.log("Now Playing: ", playing);
+
+        if (playing.indexOf("Crumb") !== -1) {
+          spotifyApi.skipToNext();
+        }
+      },
+      function(err) {
+        console.log("Something went wrong!", err);
+      }
+    );
+  });
+}
+
+poll_playback("1279512857");

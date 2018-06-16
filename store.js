@@ -1,27 +1,43 @@
-var redis = require('redis'), client = redis.createClient();
+var redis = require("redis"),
+  client = redis.createClient();
 
-const {promisify} = require('util');
+const { promisify } = require("util");
 const getAsync = promisify(client.get).bind(client);
 const setAsync = promisify(client.set).bind(client);
+const saddAsync = promisify(client.sadd).bind(client);
+const smembersAsync = promisify(client.smembers).bind(client);
 
-const buildIdKey = id => `id:${id}`
+const buildTokenKey = id => `id:${id}`;
+const buildRulesKey = id => `rules:${id}`;
 
-client.on('error', function(err) {
-  console.log('Error ' + err);
+client.on("error", function(err) {
+  console.log("Error " + err);
 });
 
-
-client.set('foo', 'bar', redis.print);
-
-// We expect a value 'foo': 'bar' to be present
-// So instead of writing client.get('foo', cb); you have to write:
-getAsync('foo').then(function(res) {
-  console.log(res);  // => 'bar'
-});
-
-function save_token(id, access_token, refresh_token) {
-  setAsync(buildIdKey(id), JSON.stringify({access_token,refresh_token})).then(res => {console.log(res)})
+function get_token(id) {
+  return getAsync(buildTokenKey(id)).then(res => JSON.parse(res));
 }
 
+function save_token(id, access_token, refresh_token) {
+  setAsync(
+    buildTokenKey(id),
+    JSON.stringify({ access_token, refresh_token })
+  ).then(res => {
+    console.log(res);
+  });
+}
 
-module.exports ={save_token}
+function add_rule(id, rule) {
+  return saddAsync(buildRulesKey(id), rule).then(res => {
+    console.log(res);
+  });
+}
+function get_rules(id) {
+  return smembersAsync(buildRulesKey(id));
+}
+module.exports = {
+  save_token,
+  get_token,
+  add_rule,
+  get_rules
+};
