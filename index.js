@@ -1,6 +1,6 @@
 var SpotifyWebApi = require("spotify-web-api-node");
 var { client_id, client_secret } = require("./secrets.js");
-var { save_token, get_token } = require("./store.js");
+var { save_token, get_token, get_users } = require("./store.js");
 
 function extract_strings(data) {
   let item = data.body.item;
@@ -36,6 +36,7 @@ function refresh_auth(user_id) {
 }
 
 function poll_playback(user_id) {
+  console.log("polling: ", user_id);
   refresh_auth(user_id).then(spotifyApi => {
     spotifyApi.getMyCurrentPlaybackState({}).then(
       function(data) {
@@ -53,4 +54,8 @@ function poll_playback(user_id) {
   });
 }
 
-poll_playback("1279512857");
+function poll_all() {
+  get_users().then(users => users.forEach(poll_playback));
+}
+
+setInterval(poll_all, 1000 * 60);

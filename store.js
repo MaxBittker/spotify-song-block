@@ -1,8 +1,11 @@
 var redis = require("redis"),
   client = redis.createClient();
 
+client.select(1);
+
 const { promisify } = require("util");
 const getAsync = promisify(client.get).bind(client);
+const keysAsync = promisify(client.keys).bind(client);
 const setAsync = promisify(client.set).bind(client);
 const saddAsync = promisify(client.sadd).bind(client);
 const smembersAsync = promisify(client.smembers).bind(client);
@@ -35,9 +38,17 @@ function add_rule(id, rule) {
 function get_rules(id) {
   return smembersAsync(buildRulesKey(id));
 }
+
+function get_users() {
+  return keysAsync(buildTokenKey("*")).then(users =>
+    users.map(user => user.split(":")[1])
+  );
+}
+
 module.exports = {
   save_token,
   get_token,
   add_rule,
-  get_rules
+  get_rules,
+  get_users
 };
