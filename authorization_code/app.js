@@ -14,10 +14,9 @@ var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
 var bodyParser = require("body-parser");
 
-var { client_id, client_secret } = require("../secrets.js");
+var { client_id, client_secret, redirect_uri } = require("../secrets.js");
 var { save_token, add_rule, get_rules } = require("../store.js");
 
-var redirect_uri = "http://localhost:8888/callback/"; // Your redirect uri
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
