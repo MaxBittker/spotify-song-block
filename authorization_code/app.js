@@ -17,6 +17,11 @@ var bodyParser = require("body-parser");
 var { client_id, client_secret, redirect_uri } = require("../secrets.js");
 var { save_token, add_rule, get_rules } = require("../store.js");
 
+var Raven = require("raven");
+Raven.config(
+  "https://81654e2af75740688876d8891cda50e4@sentry.io/1227794"
+).install();
+
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string

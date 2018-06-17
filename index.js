@@ -2,6 +2,11 @@ var SpotifyWebApi = require("spotify-web-api-node");
 var { client_id, client_secret } = require("./secrets.js");
 var { save_token, get_token, get_users, get_rules } = require("./store.js");
 
+var Raven = require("raven");
+Raven.config(
+  "https://81654e2af75740688876d8891cda50e4@sentry.io/1227794"
+).install();
+
 function extract_strings(data) {
   let item = data.body.item;
   let name = item.name;

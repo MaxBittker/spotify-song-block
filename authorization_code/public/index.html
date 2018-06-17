@@ -4,6 +4,7 @@
 <head>
   <title>Spotify Song Block</title>
   <link rel="stylesheet" href="semantic.min.css">
+  <script src="https://cdn.ravenjs.com/3.26.2/raven.min.js" crossorigin="anonymous"></script>
   <style type="text/css">
     body {
       margin: 20px;
@@ -95,6 +96,8 @@
   <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
   <script>
     (function () {
+
+      Raven.config('https://81654e2af75740688876d8891cda50e4@sentry.io/1227794').install()
 
       function refresh_rules() {
         $.get('/get_rules', { 'user_id': window.user_id }, function (data) {
