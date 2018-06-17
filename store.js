@@ -31,10 +31,11 @@ function save_token(id, access_token, refresh_token) {
 }
 
 function add_rule(id, rule) {
-  return saddAsync(buildRulesKey(id), rule).then(res => {
+  return saddAsync(buildRulesKey(id), rule.toLowerCase()).then(res => {
     console.log(res);
   });
 }
+
 function get_rules(id) {
   return smembersAsync(buildRulesKey(id));
 }

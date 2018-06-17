@@ -1,6 +1,6 @@
 var SpotifyWebApi = require("spotify-web-api-node");
 var { client_id, client_secret } = require("./secrets.js");
-var { save_token, get_token, get_users } = require("./store.js");
+var { save_token, get_token, get_users, get_rules } = require("./store.js");
 
 function extract_strings(data) {
   let item = data.body.item;
@@ -42,10 +42,11 @@ function poll_playback(user_id) {
       function(data) {
         let playing = extract_strings(data);
         console.log("Now Playing: ", playing);
-
-        if (playing.indexOf("Crumb") !== -1) {
-          spotifyApi.skipToNext();
-        }
+        get_rules(user_id).then(rules => {
+          if (rules.some(rule => playing.indexOf(rule) !== -1)) {
+            spotifyApi.skipToNext();
+          }
+        });
       },
       function(err) {
         console.log("Something went wrong!", err);
@@ -57,5 +58,5 @@ function poll_playback(user_id) {
 function poll_all() {
   get_users().then(users => users.forEach(poll_playback));
 }
-
-setInterval(poll_all, 1000 * 60);
+poll_all();
+setInterval(poll_all, 1000 * 30);
